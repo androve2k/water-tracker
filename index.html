@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Contatore Acqua — Quanta acqua bevi al giorno? · Andrea Roversi</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#03091a">
+<meta name="description" content="Contatore acqua giornaliero gratuito con account personale: registra i bicchieri che bevi, imposta un obiettivo, mantieni la streak e guarda il grafico settimanale. Sync su tutti i dispositivi con username e PIN.">
+<meta name="author" content="Andrea Roversi">
+<link rel="canonical" href="https://roversia.it/apps/acqua.html">
+<meta name="keywords" content="contatore acqua giornaliero, quanta acqua bere al giorno, tracker acqua gratis, app bere acqua, promemoria acqua, water tracker online">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://roversia.it/apps/acqua.html">
+<meta property="og:title" content="Contatore Acqua · Andrea Roversi">
+<meta property="og:description" content="Registra l'acqua che bevi ogni giorno. Obiettivo, streak e grafico settimanale. Gratis, con sync multi-device.">
+<meta property="og:image" content="https://roversia.it/og/og-apps.webp">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Contatore Acqua",
+  "description": "Contatore giornaliero dell'acqua bevuta con obiettivo personalizzabile, streak e grafico settimanale. Account con username e PIN, dati sincronizzati su Firebase.",
+  "url": "https://roversia.it/apps/acqua.html",
+  "applicationCategory": "HealthApplication",
+  "operatingSystem": "Web",
+  "browserRequirements": "Requires JavaScript",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+  "author": { "@type": "Person", "name": "Andrea Roversi", "url": "https://roversia.it" }
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#03091a;--card:rgba(255,255,255,.03);--border:rgba(59,130,246,.15);--border-h:rgba(59,130,246,.35);--text:#e8eaf0;--dim:#8892a4;--muted:#4a5568;--blue:#3b82f6;--cyan:#22d3ee;--water:#38bdf8;}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;line-height:1.7;min-height:100vh;-webkit-font-smoothing:antialiased}
+#canvas{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none}
+.site-nav{position:fixed;top:0;left:0;right:0;z-index:500;height:calc(60px + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);display:flex;align-items:center;justify-content:space-between;padding-left:1.5rem;padding-right:1.5rem;background:rgba(3,9,26,.85);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.site-nav-brand{display:flex;align-items:center;gap:.6rem;text-decoration:none;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:1rem;color:var(--text)}
+.site-nav-brand img{width:28px;height:28px;border-radius:6px}
+.site-nav-links{display:flex;align-items:center;gap:1.5rem}
+.site-nav-link{text-decoration:none;font-size:.875rem;font-weight:500;color:var(--dim);transition:color .2s}
+.site-nav-link:hover,.site-nav-link.active{color:var(--text)}
+.site-nav-cta{background:var(--blue);color:#fff!important;padding:.4rem 1rem;border-radius:8px;font-size:.8rem;font-weight:600}
+@media(max-width:580px){.site-nav-links{display:none}}
+.lang-btn{background:transparent;border:1px solid rgba(59,130,246,.25);border-radius:6px;padding:.28rem .45rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;line-height:0;transition:all .2s;flex-shrink:0}
+.lang-btn:hover{border-color:rgba(59,130,246,.5);background:rgba(59,130,246,.08)}
+.nav-hamburger{display:none;flex-direction:column;justify-content:center;align-items:center;gap:5px;width:36px;height:36px;background:transparent;border:1px solid rgba(59,130,246,.25);border-radius:8px;cursor:pointer;padding:0;flex-shrink:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.nav-hamburger span{display:block;width:18px;height:1.5px;background:var(--text);border-radius:2px;transition:transform .22s ease,opacity .22s ease;transform-origin:center}
+.nav-hamburger.open span:first-child{transform:translateY(6.5px) rotate(45deg)}
+.nav-hamburger.open span:nth-child(2){opacity:0;transform:scaleX(0)}
+.nav-hamburger.open span:last-child{transform:translateY(-6.5px) rotate(-45deg)}
+.nav-mobile-menu{position:fixed;top:calc(60px + env(safe-area-inset-top));left:0;right:0;z-index:490;background:rgba(3,9,26,.97);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid rgba(59,130,246,.2);display:flex;flex-direction:column;overflow:hidden;max-height:0;transition:max-height .28s cubic-bezier(.4,0,.2,1),padding .28s;padding:0 1.25rem}
+.nav-mobile-menu.open{max-height:360px;padding:.75rem 1.25rem .85rem}
+.nav-mobile-link{display:block;padding:.65rem .75rem;font-size:.9rem;font-weight:500;color:var(--dim);text-decoration:none;border-radius:8px;transition:color .15s,background .15s}
+.nav-mobile-link:hover{color:var(--text);background:rgba(59,130,246,.08)}
+.nav-mobile-cta{margin-top:.35rem;background:var(--blue)!important;color:#fff!important;text-align:center;font-weight:600;font-size:.85rem}
+@media(min-width:581px){.nav-mobile-menu{display:none!important}.nav-hamburger{display:none!important}}
+
+.page-wrap{max-width:640px;margin:0 auto;padding:calc(60px + env(safe-area-inset-top) + 2.5rem) 1.5rem 4rem}
+.back-link{display:inline-flex;align-items:center;gap:.4rem;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);text-decoration:none;margin-bottom:1.75rem;transition:color .2s}
+.back-link:hover{color:var(--blue)}
+.page-tag{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.75rem}
+h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(1.6rem,4vw,2.1rem);font-weight:700;letter-spacing:-.03em;margin-bottom:.5rem;line-height:1.15}
+.page-lead{color:var(--dim);font-size:.95rem;margin-bottom:2rem;line-height:1.7}
+h2{font-family:'Space Grotesk',sans-serif;font-size:1.2rem;font-weight:600;margin:2.25rem 0 .75rem;color:var(--text)}
+p{color:var(--dim);margin-bottom:1rem;font-size:.95rem;line-height:1.75}
+strong{color:var(--text)}
+a.inline-link{color:var(--blue);text-decoration:none}
+a.inline-link:hover{text-decoration:underline}
+code{font-family:'JetBrains Mono',monospace;font-size:.82em;background:rgba(59,130,246,.08);padding:1px 5px;border-radius:4px;color:var(--cyan)}
+
+/* AUTH CARD */
+.auth-card{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:16px;padding:1.75rem;max-width:420px;margin:0 auto 2rem}
+.auth-title{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:1.05rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:.5rem}
+.field{margin-bottom:1rem}
+.field label{display:block;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem}
+.field input{width:100%;background:#070d1f;border:1px solid var(--border);border-radius:10px;padding:.7rem .9rem;color:var(--text);font-family:'Inter',sans-serif;font-size:1rem;outline:none;transition:border-color .2s}
+.field input:focus{border-color:var(--blue)}
+.field input.pin{font-family:'JetBrains Mono',monospace;letter-spacing:.4em}
+.field .hint{font-size:.75rem;color:var(--muted);margin-top:.35rem}
+.btn{width:100%;padding:.8rem 1.5rem;border-radius:10px;font-size:.92rem;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all .2s;font-family:'Space Grotesk',sans-serif}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:hover{background:#2563eb}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-ghost{background:transparent;color:var(--dim);border-color:var(--border);margin-top:.6rem}
+.btn-ghost:hover{border-color:var(--blue);color:var(--blue)}
+.auth-msg{font-size:.85rem;line-height:1.5;border-radius:10px;padding:.7rem .9rem;margin-bottom:1rem;display:none}
+.auth-msg.err{display:block;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:#fca5a5}
+.auth-msg.ok{display:block;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);color:#4ade80}
+.auth-msg.info{display:block;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);color:#93c5fd}
+
+/* APP */
+#app-view{display:none}
+.app-top{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1.5rem}
+.app-user{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--dim)}
+.app-user strong{color:var(--cyan);font-weight:500}
+.logout-btn{background:transparent;border:1px solid var(--border);border-radius:8px;padding:.35rem .8rem;color:var(--muted);font-size:.75rem;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .2s}
+.logout-btn:hover{border-color:rgba(239,68,68,.4);color:#f87171}
+
+.ring-wrap{display:flex;flex-direction:column;align-items:center;margin:1rem 0 1.75rem}
+.ring-box{position:relative;width:220px;height:220px}
+.ring-box svg{transform:rotate(-90deg)}
+.ring-track{fill:none;stroke:rgba(56,189,248,.1);stroke-width:14}
+.ring-fill{fill:none;stroke:url(#waterGrad);stroke-width:14;stroke-linecap:round;transition:stroke-dashoffset .6s cubic-bezier(.4,0,.2,1)}
+.ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-ml{font-family:'Space Grotesk',sans-serif;font-size:2.2rem;font-weight:700;letter-spacing:-.02em;line-height:1}
+.ring-goal{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);margin-top:.4rem}
+.ring-pct{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--water);margin-top:.2rem}
+
+.quick-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin-bottom:.75rem}
+.quick-btn{background:rgba(56,189,248,.06);border:1px solid rgba(56,189,248,.2);border-radius:12px;padding:.75rem .3rem .65rem;cursor:pointer;color:var(--text);text-align:center;transition:all .15s;font-family:'Inter',sans-serif;display:flex;flex-direction:column;align-items:center;gap:.15rem}
+.quick-btn:hover{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.45);transform:translateY(-2px)}
+.quick-btn:active{transform:scale(.96)}
+.quick-icon{font-size:1.35rem;line-height:1}
+.quick-label{font-family:'Space Grotesk',sans-serif;font-weight:500;font-size:.74rem;color:var(--dim);white-space:nowrap}
+.quick-ml{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--water)}
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:1.75rem}
+.mini-btn{background:transparent;border:1px solid var(--border);border-radius:10px;padding:.55rem;color:var(--dim);font-size:.8rem;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-weight:500;transition:all .2s}
+.mini-btn:hover{border-color:var(--blue);color:var(--blue)}
+.mini-btn:disabled{opacity:.4;cursor:not-allowed}
+
+.stats-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.75rem}
+.stat-card{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:14px;padding:1rem 1.15rem}
+.stat-label{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:.3rem}
+.stat-value{font-family:'Space Grotesk',sans-serif;font-size:1.35rem;font-weight:700}
+.stat-value small{font-size:.7em;color:var(--dim);font-weight:500}
+
+.chart-card{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:14px;padding:1.25rem 1.25rem 1rem;margin-bottom:1.5rem}
+.chart-title{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:.9rem}
+#weekChart{width:100%;height:auto;display:block}
+.bar{fill:rgba(56,189,248,.28);transition:fill .2s}
+.bar.goal-met{fill:var(--water)}
+.bar-label{font-family:'JetBrains Mono',monospace;font-size:9px;fill:var(--muted);text-anchor:middle}
+.bar-val{font-family:'JetBrains Mono',monospace;font-size:8.5px;fill:var(--dim);text-anchor:middle}
+.goal-line{stroke:rgba(34,211,238,.4);stroke-width:1;stroke-dasharray:4 4}
+
+.goal-edit{display:flex;align-items:center;gap:.6rem;margin-bottom:2rem}
+.goal-edit input{width:110px;background:#070d1f;border:1px solid var(--border);border-radius:10px;padding:.55rem .8rem;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:.9rem;outline:none}
+.goal-edit input:focus{border-color:var(--blue)}
+.goal-edit .mini-btn{width:auto;padding:.55rem 1.1rem}
+.goal-edit span{font-size:.82rem;color:var(--muted)}
+
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:rgba(3,9,26,.95);border:1px solid rgba(56,189,248,.35);border-radius:12px;padding:.7rem 1.3rem;font-size:.85rem;color:var(--text);z-index:600;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;backdrop-filter:blur(8px)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+footer{text-align:center;padding:2.5rem 1.5rem;color:var(--muted);font-size:13px;border-top:1px solid var(--border);margin-top:2rem}
+.footer-nav{display:flex;flex-wrap:wrap;justify-content:center;gap:.75rem 1.25rem;margin-bottom:.85rem}
+.footer-nav a{color:var(--muted);text-decoration:none;font-size:12px;transition:color .2s}
+.footer-nav a:hover{color:var(--blue)}
+footer a{color:var(--muted)}
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .55s ease,transform .55s ease}
+.reveal.visible{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}.ring-fill{transition:none}}
+@media(max-width:460px){.quick-row{grid-template-columns:repeat(4,1fr)}.quick-label{font-size:.66rem}}
+@media(max-width:340px){.quick-row{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<canvas id="canvas" aria-hidden="true"></canvas>
+<nav class="site-nav">
+  <a href="/" class="site-nav-brand">
+    <img src="/LogoARSquare.png" alt="Roversia">
+    <span>Roversia.it</span>
+  </a>
+  <div class="site-nav-links">
+    <a href="/" class="site-nav-link">Home</a>
+    <a href="/projects.html" class="site-nav-link">Progetti</a>
+    <a href="/utility.html" class="site-nav-link">Utility</a>
+    <a href="/apps.html" class="site-nav-link active">App</a>
+    <a href="/blog.html" class="site-nav-link">Blog</a>
+    <a href="/#contatti" class="site-nav-link site-nav-cta">Contatti</a>
+  </div>
+  <button id="lang-switcher" class="lang-btn" onclick="toggleLang()" aria-label="Switch to English" title="EN"><img src="https://flagcdn.com/w20/gb.png" width="20" height="15" alt="EN" style="display:block;border-radius:2px;pointer-events:none"></button>
+  <button class="nav-hamburger" id="navHamburger" onclick="navToggle()" aria-label="Menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<script>function navToggle(){var m=document.getElementById("navMobileMenu"),b=document.getElementById("navHamburger"),o=m.classList.toggle("open");b.classList.toggle("open",o);b.setAttribute("aria-expanded",String(o));m.setAttribute("aria-hidden",String(!o));}</script>
+
+<div class="nav-mobile-menu" id="navMobileMenu" aria-hidden="true">
+  <a href="/" class="nav-mobile-link">🏠 Home</a>
+  <a href="/projects.html" class="nav-mobile-link" data-i18n="nav_mob_projects">🚀 Progetti</a>
+  <a href="/utility.html" class="nav-mobile-link">🛠️ Utility</a>
+  <a href="/apps.html" class="nav-mobile-link">📱 App</a>
+  <a href="/blog.html" class="nav-mobile-link">📝 Blog</a>
+  <a href="/#contatti" class="nav-mobile-link nav-mobile-cta" data-i18n="nav_mob_contact">✉️ Contatti</a>
+</div>
+
+<main class="page-wrap">
+  <a href="/apps.html" class="back-link">← applicazioni</a>
+
+  <p class="page-tag reveal">// App · Salute</p>
+  <h1 class="reveal">💧 <span class="lang-it">Contatore Acqua</span><span class="lang-en" hidden>Water Tracker</span></h1>
+  <div class="lang-it"><p class="page-lead reveal">
+    Registra l'acqua che bevi ogni giorno, imposta il tuo obiettivo e non spezzare la streak.
+    I dati sono sincronizzati sul tuo account: accedi da qualsiasi dispositivo.
+  </p></div>
+  <div class="lang-en" hidden><p class="page-lead reveal">
+    Log the water you drink every day, set your goal and keep the streak alive.
+    Data is synced to your account: sign in from any device.
+  </p></div>
+
+  <!-- ═══════════ AUTH VIEW ═══════════ -->
+  <div id="auth-view" class="reveal">
+    <div class="auth-card">
+      <div class="auth-title">🔑 <span class="lang-it">Accedi o crea un account</span><span class="lang-en" hidden>Sign in or create an account</span></div>
+      <div class="auth-msg" id="authMsg" role="alert"></div>
+      <div class="field">
+        <label for="authUser">Username</label>
+        <input id="authUser" type="text" autocomplete="username" maxlength="20" placeholder="mario_rossi" inputmode="text" autocapitalize="none" spellcheck="false">
+        <div class="hint"><span class="lang-it">3–20 caratteri: lettere, numeri, underscore.</span><span class="lang-en" hidden>3–20 characters: letters, numbers, underscore.</span></div>
+      </div>
+      <div class="field">
+        <label for="authPin">PIN</label>
+        <input id="authPin" type="password" class="pin" inputmode="numeric" pattern="[0-9]*" autocomplete="current-password" maxlength="6" placeholder="••••">
+        <div class="hint"><span class="lang-it">4–6 cifre. Non usare PIN che usi altrove (bancomat, telefono).</span><span class="lang-en" hidden>4–6 digits. Don't reuse PINs from elsewhere (ATM, phone).</span></div>
+      </div>
+      <button class="btn btn-primary" id="btnLogin" onclick="WaterAuth.login()"><span class="lang-it">Accedi</span><span class="lang-en" hidden>Sign in</span></button>
+      <button class="btn btn-ghost" id="btnRegister" onclick="WaterAuth.register()" style="display:none"><span class="lang-it">Crea nuovo account</span><span class="lang-en" hidden>Create new account</span></button>
+    </div>
+    <div class="lang-it"><p style="text-align:center;font-size:.82rem;color:var(--muted)">Il PIN non viene mai salvato in chiaro: viene trasformato in hash PBKDF2 nel tuo browser prima dell'invio.</p></div>
+    <div class="lang-en" hidden><p style="text-align:center;font-size:.82rem;color:var(--muted)">Your PIN is never stored in plain text: it's turned into a PBKDF2 hash in your browser before being sent.</p></div>
+  </div>
+
+  <!-- ═══════════ APP VIEW ═══════════ -->
+  <div id="app-view">
+    <div class="app-top">
+      <div class="app-user"><span class="lang-it">ciao,</span><span class="lang-en" hidden>hi,</span> <strong id="userLabel"></strong></div>
+      <button class="logout-btn" onclick="WaterAuth.logout()"><span class="lang-it">esci</span><span class="lang-en" hidden>log out</span></button>
+    </div>
+
+    <div class="ring-wrap">
+      <div class="ring-box">
+        <svg width="220" height="220" viewBox="0 0 220 220" aria-hidden="true">
+          <defs>
+            <linearGradient id="waterGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#3b82f6"/>
+              <stop offset="100%" stop-color="#22d3ee"/>
+            </linearGradient>
+          </defs>
+          <circle class="ring-track" cx="110" cy="110" r="96"/>
+          <circle class="ring-fill" id="ringFill" cx="110" cy="110" r="96" stroke-dasharray="603.2" stroke-dashoffset="603.2"/>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-ml"><span id="todayMl">0</span><small style="font-size:.45em;color:var(--dim)"> ml</small></div>
+          <div class="ring-goal"><span class="lang-it">obiettivo</span><span class="lang-en" hidden>goal</span> <span id="goalLabel">2000</span> ml</div>
+          <div class="ring-pct" id="pctLabel">0%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="quick-row">
+      <button class="quick-btn" onclick="WaterApp.add(200)" title="Bicchiere d'acqua">
+        <span class="quick-icon">💧</span>
+        <span class="quick-label"><span class="lang-it">Bicchiere</span><span class="lang-en" hidden>Glass</span></span>
+        <span class="quick-ml">+200 ml</span>
+      </button>
+      <button class="quick-btn" onclick="WaterApp.add(500)" title="Bottiglia d'acqua">
+        <span class="quick-icon">🍶</span>
+        <span class="quick-label"><span class="lang-it">Bottiglia</span><span class="lang-en" hidden>Bottle</span></span>
+        <span class="quick-ml">+500 ml</span>
+      </button>
+      <button class="quick-btn" onclick="WaterApp.add(30)" title="Caffè espresso">
+        <span class="quick-icon">☕</span>
+        <span class="quick-label">Espresso</span>
+        <span class="quick-ml">+30 ml</span>
+      </button>
+      <button class="quick-btn" onclick="WaterApp.add(100)" title="Ginseng">
+        <span class="quick-icon">🍵</span>
+        <span class="quick-label">Ginseng</span>
+        <span class="quick-ml">+100 ml</span>
+      </button>
+      <button class="quick-btn" onclick="WaterApp.add(150)" title="Cappuccino">
+        <span class="quick-icon">🥛</span>
+        <span class="quick-label">Cappuccino</span>
+        <span class="quick-ml">+150 ml</span>
+      </button>
+      <button class="quick-btn" onclick="WaterApp.add(200)" title="Tè">
+        <span class="quick-icon">🫖</span>
+        <span class="quick-label"><span class="lang-it">Tè</span><span class="lang-en" hidden>Tea</span></span>
+        <span class="quick-ml">+200 ml</span>
+      </button>
+      <button class="quick-btn" onclick="WaterApp.add(200)" title="Succo di frutta">
+        <span class="quick-icon">🧃</span>
+        <span class="quick-label"><span class="lang-it">Succo</span><span class="lang-en" hidden>Juice</span></span>
+        <span class="quick-ml">+200 ml</span>
+      </button>
+      <button class="quick-btn" onclick="WaterApp.add(330)" title="Bibita">
+        <span class="quick-icon">🥤</span>
+        <span class="quick-label"><span class="lang-it">Bibita</span><span class="lang-en" hidden>Soda</span></span>
+        <span class="quick-ml">+330 ml</span>
+      </button>
+    </div>
+    <div class="row-2">
+      <button class="mini-btn" onclick="WaterApp.addCustom()"><span class="lang-it">+ quantità libera</span><span class="lang-en" hidden>+ custom amount</span></button>
+      <button class="mini-btn" id="btnUndo" onclick="WaterApp.undo()" disabled><span class="lang-it">↩ annulla ultimo</span><span class="lang-en" hidden>↩ undo last</span></button>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label"><span class="lang-it">Streak</span><span class="lang-en" hidden>Streak</span></div>
+        <div class="stat-value">🔥 <span id="streakVal">0</span> <small><span class="lang-it">giorni</span><span class="lang-en" hidden>days</span></small></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label"><span class="lang-it">Media 7 giorni</span><span class="lang-en" hidden>7-day average</span></div>
+        <div class="stat-value"><span id="avgVal">0</span> <small>ml</small></div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title"><span class="lang-it">Ultimi 7 giorni</span><span class="lang-en" hidden>Last 7 days</span></div>
+      <svg id="weekChart" viewBox="0 0 560 190" role="img" aria-label="Grafico acqua ultimi 7 giorni"></svg>
+    </div>
+
+    <div class="goal-edit">
+      <span><span class="lang-it">Obiettivo giornaliero:</span><span class="lang-en" hidden>Daily goal:</span></span>
+      <input id="goalInput" type="number" min="500" max="6000" step="100" inputmode="numeric"> 
+      <button class="mini-btn" onclick="WaterApp.saveGoal()"><span class="lang-it">Salva</span><span class="lang-en" hidden>Save</span></button>
+    </div>
+  </div>
+
+  <!-- ═══════════ SEO CONTENT ═══════════ -->
+  <div class="lang-it">
+    <h2 class="reveal">Quanta acqua bere al giorno?</h2>
+    <p class="reveal">L'indicazione più diffusa è di circa <strong>2 litri al giorno</strong> per un adulto, ma il fabbisogno reale varia con peso, attività fisica, clima e alimentazione. L'obiettivo predefinito dell'app è 2000&nbsp;ml — puoi modificarlo in qualsiasi momento. Il valore di questo tracker non è la precisione clinica: è la <strong>costanza</strong>. Vedere la streak crescere giorno dopo giorno è il modo più semplice per trasformare il bere acqua in un'abitudine.</p>
+    <h2 class="reveal">Come funziona</h2>
+    <p class="reveal">Ogni tocco su un bicchiere aggiunge la quantità al totale di oggi, salvato in tempo reale su <strong>Firebase Realtime Database</strong>. Il tuo account è identificato solo da username e PIN — nessuna email, nessun tracciamento. Il PIN viene trasformato in un hash <code>PBKDF2</code> con la Web Crypto API direttamente nel browser: sul database non transita mai in chiaro. Accedendo dallo stesso account su telefono e computer ritrovi gli stessi dati ovunque.</p>
+  </div>
+  <div class="lang-en" hidden>
+    <h2 class="reveal">How much water should you drink per day?</h2>
+    <p class="reveal">The most common guideline is about <strong>2 liters per day</strong> for an adult, but real needs vary with weight, physical activity, climate and diet. The app's default goal is 2000&nbsp;ml — you can change it at any time. The value of this tracker isn't clinical precision: it's <strong>consistency</strong>. Watching your streak grow day after day is the simplest way to turn drinking water into a habit.</p>
+    <h2 class="reveal">How it works</h2>
+    <p class="reveal">Every tap on a glass adds the amount to today's total, saved in real time on <strong>Firebase Realtime Database</strong>. Your account is identified only by username and PIN — no email, no tracking. The PIN is turned into a <code>PBKDF2</code> hash with the Web Crypto API right in your browser: it never reaches the database in plain text. Sign in with the same account on phone and computer and your data is everywhere.</p>
+  </div>
+
+</main>
+
+<div class="toast" id="toast" role="status"></div>
+
+<footer>
+  <nav class="footer-nav">
+    <a href="/">Home</a>
+    <a href="/projects.html">Progetti</a>
+    <a href="/utility.html">Utility</a>
+    <a href="/apps.html">App</a>
+    <a href="/blog.html">Blog</a>
+    <a href="/#contatti">Contatti</a>
+  </nav>
+  <p>Andrea Roversi &middot; Liguria, Italia &mdash; Costruito con HTML puro &middot; Hosted on <a href="https://roversia.it">roversia.it</a></p>
+</footer>
+
+<script src="/lang.js"></script>
+<script src="/main.js"></script>
+<script>
+/* ═════════════════════════════════════════════════════════════
+   CONTATORE ACQUA — auth username+PIN (PBKDF2) + tracker su RTDB
+   Firebase Realtime Database via REST API (no SDK)
+
+   Struttura RTDB:
+     apps_users/
+       {username}/ { s: saltB64, h: hashB64, c: timestamp }
+     apps_water/
+       {username}/
+         goal: 2000
+         days/
+           2026-07-02: 1750
+
+   Regole RTDB consigliate:
+   {
+     "rules": {
+       "apps_users": {
+         "$u": {
+           ".read": true,
+           ".write": "!data.exists()",   // solo creazione, mai sovrascrittura
+           ".validate": "$u.matches(/^[a-z0-9_]{3,20}$/) && newData.hasChildren(['s','h','c']) && newData.child('h').val().length === 44 && newData.child('s').val().length === 24"
+         }
+       },
+       "apps_water": {
+         "$u": {
+           ".read": true,
+           ".write": true,
+           "goal": { ".validate": "newData.isNumber() && newData.val() >= 500 && newData.val() <= 6000" },
+           "days": {
+             "$d": { ".validate": "$d.matches(/^\\d{4}-\\d{2}-\\d{2}$/) && newData.isNumber() && newData.val() >= 0 && newData.val() <= 20000" }
+           },
+           "$other": { ".validate": false }
+         }
+       }
+     }
+   }
+
+   ⚠️ Limite noto: senza un backend che verifica il PIN, le regole
+   non possono legare la scrittura all'identità (chiunque conosca
+   uno username potrebbe scrivere sui suoi dati via REST).
+   Accettabile per dati non sensibili come i ml d'acqua. Upgrade
+   path: Netlify Function che verifica lo hash e firma un token
+   HMAC (stesso pattern del blog-06), regole con custom auth.
+═════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+
+  /* ⚠️ DEMO REPO: questo non è l'URL del database di produzione.
+     Per eseguire l'app in locale:
+       1. crea un progetto Firebase gratuito → Realtime Database
+       2. incolla qui l'URL del tuo RTDB
+       3. pubblica le regole di sicurezza riportate sopra
+     La versione live su roversia.it punta a un progetto separato. */
+  const RTDB_URL = 'https://YOUR-PROJECT-default-rtdb.YOUR-REGION.firebasedatabase.app';
+  const SESSION_KEY = 'roversia_apps_session';
+  const LOCK_KEY = 'roversia_apps_lock';
+  const SESSION_DAYS = 30;
+  const PBKDF2_ITER = 150000;
+
+  const $ = id => document.getElementById(id);
+  const enc = new TextEncoder();
+  const isEN = () => (localStorage.getItem('lang') || document.documentElement.lang) === 'en';
+  const t = (it, en) => isEN() ? en : it;
+
+  function todayKey(offset = 0) {
+    const d = new Date();
+    d.setDate(d.getDate() + offset);
+    const p = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  }
+
+  function b64(buf) {
+    return btoa(String.fromCharCode(...new Uint8Array(buf)));
+  }
+  function b64ToBytes(s) {
+    return Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  }
+
+  async function derivePin(pin, saltBytes) {
+    const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(pin), 'PBKDF2', false, ['deriveBits']);
+    const bits = await crypto.subtle.deriveBits(
+      { name: 'PBKDF2', hash: 'SHA-256', salt: saltBytes, iterations: PBKDF2_ITER },
+      keyMaterial, 256
+    );
+    return b64(bits); // 44 caratteri base64
+  }
+
+  function toast(msg) {
+    const el = $('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.classList.remove('show'), 2200);
+  }
+
+  function showMsg(kind, msg) {
+    const el = $('authMsg');
+    el.className = 'auth-msg ' + kind;
+    el.textContent = msg;
+  }
+  function clearMsg() { $('authMsg').className = 'auth-msg'; }
+
+  /* ── Rate limit locale: 5 tentativi falliti → 60s di attesa ── */
+  function checkLock() {
+    const lock = JSON.parse(localStorage.getItem(LOCK_KEY) || '{"n":0,"until":0}');
+    if (lock.until > Date.now()) {
+      const s = Math.ceil((lock.until - Date.now()) / 1000);
+      showMsg('err', t(`Troppi tentativi. Riprova tra ${s} secondi.`, `Too many attempts. Try again in ${s} seconds.`));
+      return false;
+    }
+    return true;
+  }
+  function registerFail() {
+    const lock = JSON.parse(localStorage.getItem(LOCK_KEY) || '{"n":0,"until":0}');
+    lock.n++;
+    if (lock.n >= 5) { lock.until = Date.now() + 60000; lock.n = 0; }
+    localStorage.setItem(LOCK_KEY, JSON.stringify(lock));
+  }
+  function clearLock() { localStorage.removeItem(LOCK_KEY); }
+
+  /* ═══════════════ AUTH ═══════════════ */
+  const WaterAuth = {
+
+    session() {
+      try {
+        const s = JSON.parse(localStorage.getItem(SESSION_KEY));
+        if (s && s.u && s.exp > Date.now()) return s;
+      } catch (e) {}
+      return null;
+    },
+
+    validate(u, pin) {
+      if (!/^[a-z0-9_]{3,20}$/.test(u)) {
+        showMsg('err', t('Username non valido: 3–20 caratteri, solo minuscole, numeri e underscore.', 'Invalid username: 3–20 characters, lowercase letters, numbers and underscore only.'));
+        return false;
+      }
+      if (!/^\d{4,6}$/.test(pin)) {
+        showMsg('err', t('Il PIN deve essere di 4–6 cifre.', 'PIN must be 4–6 digits.'));
+        return false;
+      }
+      return true;
+    },
+
+    async login() {
+      clearMsg();
+      if (!checkLock()) return;
+      const u = $('authUser').value.trim().toLowerCase();
+      const pin = $('authPin').value.trim();
+      if (!this.validate(u, pin)) return;
+
+      $('btnLogin').disabled = true;
+      try {
+        const res = await fetch(`${RTDB_URL}/apps_users/${u}.json`);
+        if (!res.ok) throw new Error('net');
+        const user = await res.json();
+
+        if (!user) {
+          // Utente inesistente: proponi registrazione
+          showMsg('info', t(`L'account "${u}" non esiste ancora. Vuoi crearlo con questo PIN?`, `Account "${u}" doesn't exist yet. Create it with this PIN?`));
+          $('btnRegister').style.display = 'block';
+          return;
+        }
+
+        const hash = await derivePin(pin, b64ToBytes(user.s));
+        if (hash !== user.h) {
+          registerFail();
+          showMsg('err', t('PIN errato.', 'Wrong PIN.'));
+          return;
+        }
+
+        clearLock();
+        this.startSession(u);
+      } catch (e) {
+        showMsg('err', t('Errore di rete. Riprova.', 'Network error. Try again.'));
+      } finally {
+        $('btnLogin').disabled = false;
+      }
+    },
+
+    async register() {
+      clearMsg();
+      const u = $('authUser').value.trim().toLowerCase();
+      const pin = $('authPin').value.trim();
+      if (!this.validate(u, pin)) return;
+
+      $('btnRegister').disabled = true;
+      try {
+        const salt = crypto.getRandomValues(new Uint8Array(16));
+        const hash = await derivePin(pin, salt);
+        const payload = { s: b64(salt), h: hash, c: Date.now() };
+
+        // Scrittura condizionale: fallisce se l'utente esiste già (regola ".write": "!data.exists()")
+        const res = await fetch(`${RTDB_URL}/apps_users/${u}.json`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (res.status === 401 || res.status === 403) {
+          showMsg('err', t('Username già in uso. Scegline un altro.', 'Username already taken. Pick another one.'));
+          return;
+        }
+        if (!res.ok) throw new Error('net');
+
+        this.startSession(u);
+        toast(t('Account creato! 🎉', 'Account created! 🎉'));
+      } catch (e) {
+        showMsg('err', t('Errore di rete. Riprova.', 'Network error. Try again.'));
+      } finally {
+        $('btnRegister').disabled = false;
+      }
+    },
+
+    startSession(u) {
+      localStorage.setItem(SESSION_KEY, JSON.stringify({
+        u, exp: Date.now() + SESSION_DAYS * 86400000
+      }));
+      $('authPin').value = '';
+      $('btnRegister').style.display = 'none';
+      WaterApp.start(u);
+    },
+
+    logout() {
+      localStorage.removeItem(SESSION_KEY);
+      $('app-view').style.display = 'none';
+      $('auth-view').style.display = 'block';
+      $('authUser').value = '';
+      $('authPin').value = '';
+      clearMsg();
+    }
+  };
+
+  /* ═══════════════ APP ═══════════════ */
+  const WaterApp = {
+    user: null,
+    goal: 2000,
+    days: {},          // { 'YYYY-MM-DD': ml }
+    lastAdd: null,     // ml dell'ultima aggiunta (per undo, solo in memoria)
+
+    base() { return `${RTDB_URL}/apps_water/${this.user}`; },
+
+    async start(u) {
+      this.user = u;
+      $('userLabel').textContent = u;
+      $('auth-view').style.display = 'none';
+      $('app-view').style.display = 'block';
+      await this.load();
+    },
+
+    async load() {
+      try {
+        // goal + ultimi 30 giorni in due chiamate leggere
+        const [gRes, dRes] = await Promise.all([
+          fetch(`${this.base()}/goal.json`),
+          fetch(`${this.base()}/days.json?orderBy="$key"&limitToLast=30`)
+        ]);
+        const g = await gRes.json();
+        this.goal = (typeof g === 'number' && g >= 500) ? g : 2000;
+        this.days = (await dRes.json()) || {};
+      } catch (e) {
+        toast(t('Errore di caricamento dati.', 'Failed to load data.'));
+        this.days = {};
+      }
+      $('goalInput').value = this.goal;
+      this.render();
+    },
+
+    todayTotal() { return this.days[todayKey()] || 0; },
+
+    /* Scrittura atomica del giorno via ETag (pattern counter.js) */
+    async writeDay(dateKey, deltaMl, attempt = 0) {
+      const url = `${this.base()}/days/${dateKey}.json`;
+      const readRes = await fetch(url, { headers: { 'X-Firebase-ETag': 'true' } });
+      if (!readRes.ok) throw new Error('read-fail');
+      const etag = readRes.headers.get('ETag');
+      const current = await readRes.json();
+      const next = Math.max(0, (typeof current === 'number' ? current : 0) + deltaMl);
+
+      const writeRes = await fetch(url, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'If-Match': etag },
+        body: JSON.stringify(next)
+      });
+      if (writeRes.status === 412 && attempt < 4) {
+        return this.writeDay(dateKey, deltaMl, attempt + 1);
+      }
+      if (!writeRes.ok) throw new Error('write-fail');
+      return next;
+    },
+
+    async add(ml) {
+      const key = todayKey();
+      // UI ottimistica
+      this.days[key] = (this.days[key] || 0) + ml;
+      this.lastAdd = ml;
+      $('btnUndo').disabled = false;
+      this.render();
+      try {
+        this.days[key] = await this.writeDay(key, ml);
+        this.render();
+        if (this.days[key] >= this.goal && this.days[key] - ml < this.goal) {
+          toast(t('Obiettivo raggiunto! 💧🎉', 'Goal reached! 💧🎉'));
+        }
+      } catch (e) {
+        this.days[key] = Math.max(0, (this.days[key] || 0) - ml);
+        this.lastAdd = null;
+        $('btnUndo').disabled = true;
+        this.render();
+        toast(t('Errore di salvataggio. Riprova.', 'Save failed. Try again.'));
+      }
+    },
+
+    addCustom() {
+      const v = prompt(t('Quantità in ml (es. 200):', 'Amount in ml (e.g. 200):'));
+      if (v === null) return;
+      const ml = parseInt(v, 10);
+      if (!Number.isFinite(ml) || ml < 1 || ml > 3000) {
+        toast(t('Inserisci un valore tra 1 e 3000 ml.', 'Enter a value between 1 and 3000 ml.'));
+        return;
+      }
+      this.add(ml);
+    },
+
+    async undo() {
+      if (!this.lastAdd) return;
+      const ml = this.lastAdd;
+      this.lastAdd = null;
+      $('btnUndo').disabled = true;
+      const key = todayKey();
+      this.days[key] = Math.max(0, (this.days[key] || 0) - ml);
+      this.render();
+      try {
+        this.days[key] = await this.writeDay(key, -ml);
+        this.render();
+        toast(t(`Annullati ${ml} ml.`, `${ml} ml removed.`));
+      } catch (e) {
+        this.days[key] = (this.days[key] || 0) + ml;
+        this.render();
+        toast(t('Errore di salvataggio.', 'Save failed.'));
+      }
+    },
+
+    async saveGoal() {
+      const v = parseInt($('goalInput').value, 10);
+      if (!Number.isFinite(v) || v < 500 || v > 6000) {
+        toast(t('Obiettivo tra 500 e 6000 ml.', 'Goal between 500 and 6000 ml.'));
+        return;
+      }
+      try {
+        const res = await fetch(`${this.base()}/goal.json`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(v)
+        });
+        if (!res.ok) throw new Error('write-fail');
+        this.goal = v;
+        this.render();
+        toast(t('Obiettivo aggiornato.', 'Goal updated.'));
+      } catch (e) {
+        toast(t('Errore di salvataggio.', 'Save failed.'));
+      }
+    },
+
+    streak() {
+      // giorni consecutivi con obiettivo raggiunto; oggi conta se già raggiunto,
+      // altrimenti la streak parte da ieri (non punire chi deve ancora finire la giornata)
+      let n = 0;
+      let offset = (this.todayTotal() >= this.goal) ? 0 : -1;
+      while ((this.days[todayKey(offset)] || 0) >= this.goal) { n++; offset--; }
+      return n;
+    },
+
+    render() {
+      const today = this.todayTotal();
+      const pct = Math.min(1, today / this.goal);
+
+      $('todayMl').textContent = today.toLocaleString('it-IT');
+      $('goalLabel').textContent = this.goal.toLocaleString('it-IT');
+      $('pctLabel').textContent = Math.round(pct * 100) + '%';
+
+      const CIRC = 603.2; // 2πr, r=96
+      $('ringFill').style.strokeDashoffset = (CIRC * (1 - pct)).toFixed(1);
+
+      $('streakVal').textContent = this.streak();
+
+      // ultimi 7 giorni
+      const week = [];
+      for (let i = 6; i >= 0; i--) {
+        const k = todayKey(-i);
+        week.push({ key: k, ml: this.days[k] || 0 });
+      }
+      const avg = Math.round(week.reduce((s, d) => s + d.ml, 0) / 7);
+      $('avgVal').textContent = avg.toLocaleString('it-IT');
+      this.drawChart(week);
+    },
+
+    drawChart(week) {
+      const W = 560, H = 190, padB = 26, padT = 18;
+      const max = Math.max(this.goal, ...week.map(d => d.ml)) * 1.1;
+      const bw = 44, gap = (W - bw * 7) / 8;
+      const dayNames = isEN()
+        ? ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
+        : ['dom','lun','mar','mer','gio','ven','sab'];
+
+      const goalY = padT + (H - padT - padB) * (1 - this.goal / max);
+      let svg = `<line class="goal-line" x1="0" y1="${goalY.toFixed(1)}" x2="${W}" y2="${goalY.toFixed(1)}"/>`;
+
+      week.forEach((d, i) => {
+        const x = gap + i * (bw + gap);
+        const h = Math.max(2, (H - padT - padB) * (d.ml / max));
+        const y = H - padB - h;
+        const met = d.ml >= this.goal ? ' goal-met' : '';
+        const dt = new Date(d.key + 'T12:00:00');
+        svg += `<rect class="bar${met}" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw}" height="${h.toFixed(1)}" rx="6"/>`;
+        svg += `<text class="bar-label" x="${(x + bw / 2).toFixed(1)}" y="${H - 8}">${dayNames[dt.getDay()]}</text>`;
+        if (d.ml > 0) svg += `<text class="bar-val" x="${(x + bw / 2).toFixed(1)}" y="${(y - 5).toFixed(1)}">${d.ml >= 1000 ? (d.ml/1000).toFixed(1).replace('.0','') + 'L' : d.ml}</text>`;
+      });
+
+      $('weekChart').innerHTML = svg;
+    }
+  };
+
+  window.WaterAuth = WaterAuth;
+  window.WaterApp = WaterApp;
+
+  /* Enter per accedere */
+  ['authUser', 'authPin'].forEach(id => {
+    $(id).addEventListener('keydown', e => { if (e.key === 'Enter') WaterAuth.login(); });
+  });
+  /* Nascondi "crea account" se cambia lo username */
+  $('authUser').addEventListener('input', () => { $('btnRegister').style.display = 'none'; clearMsg(); });
+
+  /* Auto-login da sessione */
+  const s = WaterAuth.session();
+  if (s) WaterApp.start(s.u);
+})();
+</script>
+<script>
+const revealEls = document.querySelectorAll('.reveal');
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('visible'); io.unobserve(e.target); } });
+}, { threshold: 0.08 });
+revealEls.forEach(el => io.observe(el));
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => {}); });
+}
+</script>
+</body>
+</html>
