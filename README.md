@@ -1,23 +1,25 @@
-# 💧 Contatore Acqua
+# 💧 Water Tracker
 
-**🔗 Demo live: [roversia.it/apps/acqua.html](https://roversia.it/apps/acqua.html)**
+**🔗 Live demo: [roversia.it/apps/acqua.html](https://roversia.it/apps/acqua.html)**
 
-Mini web app per tracciare l'acqua bevuta ogni giorno, con obiettivo personalizzabile, streak e grafico settimanale. Account basato su **username + PIN** (niente email), dati sincronizzati su Firebase Realtime Database.
+A small web app for tracking daily water intake, with a custom goal, streaks, and a weekly chart. Auth is **username + PIN** (no email), data synced via Firebase Realtime Database.
 
-Fa parte della suite di app di [roversia.it](https://roversia.it/apps.html), il mio sito personale — costruito interamente in **HTML/CSS/JS vanilla, zero framework, zero build step**.
+Part of the app suite on [roversia.it](https://roversia.it/apps.html), my personal site — built entirely in **vanilla HTML/CSS/JS, zero frameworks, zero build step**.
+
+> Code comments are in Italian (my working language) — happy to translate any part on request. A full write-up of the site and its architecture is on my [blog](https://roversia.it/blog.html) (Italian).
 
 ---
 
-## Stack tecnico
+## Tech stack
 
-- **Frontend:** HTML + CSS + JavaScript puro (nessuna dipendenza, nessun bundler)
-- **Backend:** Firebase Realtime Database via **REST API** (niente SDK Firebase)
-- **Auth:** username + PIN, hash **PBKDF2-SHA256** (150.000 iterazioni) calcolato client-side con Web Crypto API — il PIN non lascia mai il browser in chiaro
-- **Sessione:** `localStorage`, scadenza 30 giorni
-- **Scritture atomiche:** pattern **ETag + `If-Match`** con retry fino a 4 tentativi su conflitto (HTTP 412), per evitare race condition quando lo stesso utente scrive da più tab/dispositivi
-- **UI ottimistica:** l'interfaccia si aggiorna subito al tocco, poi conferma (o rollback) in base alla risposta del server
+- **Frontend:** plain HTML + CSS + JavaScript (no dependencies, no bundler)
+- **Backend:** Firebase Realtime Database via **REST API** (no Firebase SDK)
+- **Auth:** username + PIN, **PBKDF2-SHA256** hash (150,000 iterations) computed client-side with the Web Crypto API — the PIN never leaves the browser in plain text
+- **Session:** `localStorage`, 30-day expiry
+- **Atomic writes:** **ETag + `If-Match`** pattern with up to 4 retries on conflict (HTTP 412), to avoid race conditions when the same user writes from multiple tabs/devices
+- **Optimistic UI:** the interface updates immediately on tap, then confirms (or rolls back) based on the server response
 
-## Struttura dati (Realtime Database)
+## Data structure (Realtime Database)
 
 ```
 apps_users/
@@ -30,7 +32,7 @@ apps_water/
       2026-07-02: 1750
 ```
 
-## Regole di sicurezza RTDB
+## RTDB security rules
 
 ```json
 {
@@ -57,28 +59,28 @@ apps_water/
 }
 ```
 
-## Limite noto (by design)
+## Known limitation (by design)
 
-Senza un backend che verifichi il PIN server-side, le regole RTDB non possono legare la scrittura all'identità: chiunque conosca uno username potrebbe scrivere sui suoi dati via REST diretta. Accettabile per dati non sensibili come i millilitri d'acqua bevuti. Upgrade path valutato: una Netlify Function che verifica l'hash e firma un token HMAC (stesso pattern usato in un'altra app della suite per l'auth cross-app), con regole RTDB basate su custom auth.
+Without a backend that verifies the PIN server-side, RTDB rules can't tie a write to identity: anyone who knows a username could write to their data via a direct REST call. Acceptable for non-sensitive data like milliliters of water. Considered upgrade path: a Netlify Function that verifies the hash and signs an HMAC token (same pattern used in another app in the suite for cross-app auth), with RTDB rules based on custom auth.
 
-Documentare esplicitamente i trade-off di sicurezza, invece di nasconderli, è una scelta voluta.
+Documenting security trade-offs explicitly, instead of hiding them, is a deliberate choice.
 
-## Eseguirla in locale
+## Running it locally
 
-1. Crea un progetto Firebase gratuito → attiva Realtime Database
-2. Pubblica le regole di sicurezza qui sopra
-3. In `index.html`, sostituisci `RTDB_URL` con l'URL del tuo progetto
-4. Apri `index.html` in un browser (nessun server richiesto — è tutto statico)
+1. Create a free Firebase project → enable Realtime Database
+2. Publish the security rules above
+3. In `index.html`, replace `RTDB_URL` with your project's URL
+4. Open `index.html` in a browser (no server required — it's fully static)
 
-> Nota: alcuni path assoluti (`/manifest.json`, `/lang.js`, `/main.js`, `/sw.js`, immagini) assumono la struttura di roversia.it. Per un deploy standalone (es. GitHub Pages) vanno adattati o rimossi.
+> Note: some absolute paths (`/manifest.json`, `/lang.js`, `/main.js`, `/sw.js`, images) assume roversia.it's site structure. For a standalone deploy (e.g. GitHub Pages) these need to be adjusted or removed.
 
-## Perché questa repo
+## Why this repo exists
 
-Questo codice è estratto dalla suite di app su [roversia.it/apps.html](https://roversia.it/apps.html), pubblicato come esempio di:
-- autenticazione custom senza dipendere da provider esterni
-- uso di Firebase via REST invece che via SDK (più controllo, meno peso)
-- gestione di scritture concorrenti senza un vero backend
+This code is extracted from the app suite on [roversia.it/apps.html](https://roversia.it/apps.html), published as an example of:
+- custom authentication without relying on an external provider
+- using Firebase via REST instead of the SDK (more control, less weight)
+- handling concurrent writes without a real backend
 
 ---
 
-Andrea Roversi · Liguria, Italia · [roversia.it](https://roversia.it)
+Andrea Roversi · Liguria, Italy · [roversia.it](https://roversia.it)
